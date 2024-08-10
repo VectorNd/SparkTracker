@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 
 def send_mail(to_addr, name, product, price, product_link):
     # username and password of the mail.
-    username, password = 'python.smtp.pbtron@gmail.com', 'python123$'
+    username, password = 'mountain.lover.rishabh@gmail.com' , 'hpus hocy dojj dhil'
 
     # Create a server. 25 is the port. port is 25 for smtp.
     server = smtplib.SMTP('smtp.gmail.com', 587)

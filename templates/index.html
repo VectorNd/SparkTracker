@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 py-8">
+    <div class="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-8">
+        <h1 class="text-2xl font-bold mb-4">Welcome, {{ user_data[0] }}!</h1>
+        <p>Your check-in frequency is {{ user_data[3] }} days.</p>
+        <h2 class="text-xl font-bold mb-4 mt-8">Your Products</h2>
+        {% if product_params %}
+            <div class="space-y-4">
+                {% for product in product_params %}
+                    <div class="bg-gray-100 rounded-lg p-4 space-y-2">
+                        <p>Product ID: {{ product[0] }}</p>
+                        <p>URL: {{ product[1] }}</p>
+                        <p>Max Price: ${{ product[2] }}</p>
+                        <form action="{{ url_for('remove_product', product_id=product[0]) }}" method="POST">
+                            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No products added yet.</p>
+        {% endif %}
+        <form action="{{ url_for('add_product') }}" method="POST" class="mt-8 space-y-4">
+            <div>
+                <label for="url" class="block font-medium text-gray-700 mb-2">Product URL</label>
+                <input type="text" id="url" name="url" class="border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-full" required>
+            </div>
+            <div>
+                <label for="max_price" class="block font-medium text-gray-700 mb-2">Max Price</label>
+                <input type="number" id="max_price" name="max_price" class="border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-full" min="0" required>
+            </div>
+            <button type="submit" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                Add Product
+            </button>
+        </form>
+        <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-8 inline-block">
+            Logout
+        </a>
+    </div>
+</body>
+</html>

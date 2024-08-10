@@ -24,6 +24,12 @@ class Database:
         These functions will get data from user and store it in the database
     '''
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.con.close()
+
     # Checks if a given file exists
     @staticmethod
     def file_exists():
@@ -49,37 +55,37 @@ class Database:
         self.c.execute('CREATE TABLE USER(username, email, number, checkFrequency)')
 
     # Gets the user data from user
-    def get_user_data(self):
-        username = input('Enter your name: ')
-        email = get_email()
-        number = get_number()
-        check_freq = get_check_freq()
+    def get_user_data(self,username,email,number,check_freq):
+        # username = input('Enter your name: ')
+        # email = get_email()
+        # number = get_number()
+        # check_freq = get_check_freq()
 
         self.c.execute('INSERT INTO USER VALUES(?, ?, ?, ?)', (username, email, number, check_freq))
 
         self.con.commit()
 
-    def get_product_params(self):
-        while True:
-            url = input('Copy the url from the product page and paste it below\n')
-            max_price = input('Enter the max price of the product\n')
+    def get_product_params(self,url,max_price):
+        # while True:
+        # url = input('Copy the url from the product page and paste it below\n')
+        # max_price = input('Enter the max price of the product\n')
 
-            product_id = len(self.c.execute("SELECT product_id FROM URL").fetchall()) + 1
-            if self.c.execute("SELECT product_id FROM URL").fetchone() == "1":
-                product_id -= 1
+        product_id = len(self.c.execute("SELECT product_id FROM URL").fetchall()) + 1
+        if self.c.execute("SELECT product_id FROM URL").fetchone() == "1":
+            product_id -= 1
 
-            # Insert the received values into the sql database
-            self.c.execute('INSERT INTO URL VALUES(?, ?, ?)',
-                           (product_id, url, max_price))
+        # Insert the received values into the sql database
+        self.c.execute('INSERT INTO URL VALUES(?, ?, ?)',
+                    (product_id, url, max_price))
 
-            # commits the changes made to the database
-            self.con.commit()
+        # commits the changes made to the database
+        self.con.commit()
 
-            print('\n\nDo you want to enter another product link? y/n\n')
+        # print('\n\nDo you want to enter another product link? y/n\n')
 
-            # If the user doesn't enter y then the url access function is terminated.
-            if input() != 'y':
-                break
+        # If the user doesn't enter y then the url access function is terminated.
+        # if input() != 'y':
+        #     break
 
     '''
         From here the functions will access the database to return values
