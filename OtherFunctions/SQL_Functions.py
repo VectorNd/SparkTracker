@@ -14,8 +14,8 @@ class Database:
         if not self.file_exists():
             self.connect()
             self.create_tables()
-            self.get_user_data()
-            self.get_product_params()
+            # self.get_user_data()
+            # self.get_product_params()
 
         else:
             self.connect()
@@ -51,21 +51,48 @@ class Database:
 
     # Create tables url and user for first time initialization
     def create_tables(self):
-        self.c.execute('CREATE TABLE URL(product_id, url, maxPrice)')
-        self.c.execute('CREATE TABLE USER(username, email, number, checkFrequency)')
+        # Create USER table with user_id as the primary key
+        self.c.execute('''
+            CREATE TABLE USER(
+                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
+                email TEXT,
+                number TEXT,
+                checkFrequency TEXT
+            )
+        ''')
 
-    # Gets the user data from user
-    def get_user_data(self,username,email,number,check_freq):
-        # username = input('Enter your name: ')
-        # email = get_email()
-        # number = get_number()
-        # check_freq = get_check_freq()
+        # Create URL table with product_id as the primary key and user_id as a foreign key
+        self.c.execute('''
+            CREATE TABLE URL(
+                product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                url TEXT,
+                maxPrice REAL,
+                FOREIGN KEY(user_id) REFERENCES USER(user_id)
+            )
+        ''')
 
-        self.c.execute('INSERT INTO USER VALUES(?, ?, ?, ?)', (username, email, number, check_freq))
-
+    # Gets the user data and stores it in the USER table, returning the user_id
+    def get_user_data(self, username, email, number, check_freq):
+        self.c.execute('INSERT INTO USER (username, email, number, checkFrequency) VALUES (?, ?, ?, ?)', 
+                       (username, email, number, check_freq))
         self.con.commit()
 
-    def get_product_params(self,url,max_price):
+        # Get the last inserted user_id
+        return self.c.execute('SELECT last_insert_rowid()').fetchone()[0]
+    
+
+    def all_users(self):
+    # Fetch all users from the USER table
+        users = self.c.execute("SELECT * FROM USER").fetchall()
+
+        # Print each user record
+        for user in users:
+            print(user)
+
+
+    def get_product_params(self,user_id,url,max_price):
         # while True:
         # url = input('Copy the url from the product page and paste it below\n')
         # max_price = input('Enter the max price of the product\n')
@@ -75,8 +102,8 @@ class Database:
             product_id -= 1
 
         # Insert the received values into the sql database
-        self.c.execute('INSERT INTO URL VALUES(?, ?, ?)',
-                    (product_id, url, max_price))
+        self.c.execute('INSERT INTO URL (user_id, url, maxPrice) VALUES (?, ?, ?)', 
+                       (user_id, url, max_price))
 
         # commits the changes made to the database
         self.con.commit()
@@ -90,9 +117,14 @@ class Database:
     '''
         From here the functions will access the database to return values
     '''
-
+    def get_user_products(self, user_id):
+        return self.c.execute('SELECT * FROM URL WHERE user_id = ?', (user_id,)).fetchall()
+    
+    def single_user_data(self,username):
+        return self.c.execute('SELECT * FROM URL WHERE username = ?', (username,)).fetchall()
+    
     def access_user_data(self):
-        return self.c.execute("SELECT * FROM USER").fetchone()
+        return self.c.execute("SELECT * FROM USER").fetchall()
 
     def access_product_params(self):
         return self.c.execute("SELECT * FROM URL").fetchall()

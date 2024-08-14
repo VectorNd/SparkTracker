@@ -1,6 +1,6 @@
 from OtherFunctions.SQL_Functions import Database
 
-from Amazon_Tracker import AmazonTracker
+from Walmart_Tracker import AmazonTracker
 
 from OtherFunctions.MiscFunctions import clear
 

@@ -7,17 +7,24 @@
 </head>
 <body class="bg-gray-100 py-8">
     <div class="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-8">
-        <h1 class="text-2xl font-bold mb-4">Welcome, {{ user_data[0] }}!</h1>
-        <p>Your check-in frequency is {{ user_data[3] }} days.</p>
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">Welcome, {{ user_data[1] }}!</h1>
+            <form action="{{ url_for('logout') }}" method="GET">
+                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    Logout
+                </button>
+            </form>
+        </div>
+        <p>Your check-in frequency is {{ user_data[4] }} minutes.</p>
         <h2 class="text-xl font-bold mb-4 mt-8">Your Products</h2>
         {% if product_params %}
             <div class="space-y-4">
                 {% for product in product_params %}
                     <div class="bg-gray-100 rounded-lg p-4 space-y-2">
                         <p>Product ID: {{ product[0] }}</p>
-                        <p>URL: {{ product[1] }}</p>
-                        <p>Max Price: ${{ product[2] }}</p>
-                        <form action="{{ url_for('remove_product', product_id=product[0]) }}" method="POST">
+                        <p>URL: <a href="{{ product[2] }}" class="text-blue-500 hover:underline">Product - {{ product[0] }}</a></p>
+                        <p>Max Price: INR{{ product[3] }}</p>
+                        <form action="{{ url_for('remove_product', product_id=product[1]) }}" method="POST">
                             <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                                 Remove
                             </button>
@@ -41,9 +48,6 @@
                 Add Product
             </button>
         </form>
-        <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-8 inline-block">
-            Logout
-        </a>
     </div>
 </body>
 </html>

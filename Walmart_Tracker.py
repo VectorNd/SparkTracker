@@ -6,6 +6,7 @@ import requests
 
 # Used to parse data provided by requests to extract the data required
 from bs4 import BeautifulSoup
+import regex as re 
 
 # miscellaneous functions that are repeated but simple
 from OtherFunctions.MiscFunctions import *
@@ -16,41 +17,47 @@ from OtherFunctions.SQL_Functions import Database
 from OtherFunctions.Send_Email import send_mail
 
 # Import module to send sms
-from OtherFunctions.Send_SMS import send_sms
+# from OtherFunctions.Send_SMS import send_sms
 
 
-class AmazonTracker:
+class WalmartTracker:
     # Constructor of the class it checks if the database file exists, and if it doesn't it creates one
     # and asks for user details and product urls
-    def __init__(self, alert_confirmation_email=False, alert_confirmation_sms=False, loop=True, debug=False):
+    def __init__(self, alert_confirmation_email=False, loop=True, debug=False):
         self.alert_confirmation_email = alert_confirmation_email
-        self.alert_confirmation_sms = alert_confirmation_sms
+        # self.alert_confirmation_sms = alert_confirmation_sms
 
         print('Accessing product data. If you are tracking many products this may take a while.')
         while KeyboardInterrupt:
             self.debug = debug
 
-            params = db.access_product_params()
-            self.name, self.to_addr, self.number, self.check_freq = db.access_user_data()
-            self.check_freq = float(self.check_freq)
-            for param in params:
-                self.product_id = param[0]
-                self.url = param[1]
-                self.maxPrice = int(param[2])
+            # params = db.access_product_params()
+            users = db.access_user_data()
+            # self.check_freq = float(self.check_freq)
+            for user in users:
+                print(user)
+                self.user_id , self.name , self.to_addr , self.number , self.check_freq = user 
+                self.check_freq = float(self.check_freq)
+                params = db.get_user_products(self.user_id) 
+                for param in params:
+                    print(param)
+                    self.product_id = param[0]
+                    self.url = param[2]
+                    self.maxPrice = int(param[3])
 
-                self.connect()
-                self.extract_data()
+                    self.connect()
+                    self.extract_data()
 
-                self.send_alert()
+                    self.send_alert()
 
-            print('\n\nAll products have been checked\n')
+                print('\n\nAll products have been checked\n')
 
-            if not loop:
-                break
+                if not loop:
+                    break
 
-            print('Enter ctrl + c to exit code')
+                print('Enter ctrl + c to exit code')
 
-            sleep(self.check_freq * 60)  # Stops the code process for 20 seconds
+                sleep(self.check_freq * 60)  # Stops the code process for 20 seconds
 
     # connects to the webpage provided using the url
     def connect(self):
@@ -86,12 +93,15 @@ class AmazonTracker:
         deal_price = None
         price = None
 
-        # Extracting data from the amazon html code
-        self.product_title = soup.find(id='productTitle').get_text().strip()
+        # Extracting data from the walmart html code
+        self.product_title = soup.find(id='main-title').get_text().strip()
         availability = soup.find(id='availability').get_text().strip()  # In stock.
 
-        price_str = (soup.find(class_='a-price-whole').get_text())
-        price_str_without_comma = price_str.replace(",", "")
+        price_str = (soup.find(attrs={'itemprop': 'price'}).get_text())
+        price_text = price_str.text
+        numbers_only = re.findall(r'\d[\d,]*\.?\d*', price_text)
+        price_number = ''.join(numbers_only)
+        price_str_without_comma = price_number.replace(",", "")
         price_float = float(price_str_without_comma)
         self.price = int(price_float)
 
@@ -134,8 +144,8 @@ class AmazonTracker:
             if self.final_price <= self.maxPrice:
                 if self.alert_confirmation_email:
                     send_mail(self.to_addr, self.name, self.product_title, self.final_price, self.url)
-                if self.alert_confirmation_sms:
-                    send_sms(self.name, self.product_title, self.final_price, self.number)
+                # if self.alert_confirmation_sms:
+                #     send_sms(self.name, self.product_title, self.final_price, self.number)
         except AttributeError:
             print("\n\tERROR: Could not access the price of the product")
 
@@ -143,4 +153,4 @@ class AmazonTracker:
 db = Database()
 if __name__ == '__main__':
     # The one is telling the constructor to enable user alerts.
-    AmazonTracker(alert_confirmation_email=True, alert_confirmation_sms=False)
+    WalmartTracker(alert_confirmation_email=True)

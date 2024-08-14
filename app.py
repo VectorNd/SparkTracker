@@ -19,10 +19,13 @@ def login():
 
         # Check if user exists in the database
         with Database() as db:
-            user_data = db.access_user_data()
+            db.all_users()
+            user_data = db.c.execute("SELECT * FROM USER WHERE username=? AND email=? AND number=? AND checkFrequency=?", 
+                                      (username, email, number, check_freq)).fetchone()
+
             print(user_data)
-            if user_data and user_data[0] == username and user_data[1] == email and user_data[2] == number and user_data[3] == check_freq:
-                session['user'] = username
+            if user_data:
+                session['user'] = username 
                 flash('Logged in successfully.', 'success')
                 return redirect(url_for('index'))
             else:
@@ -40,6 +43,8 @@ def register():
         
         with Database() as db:
            db.get_user_data(username, email, number, check_freq)
+           db.all_users()
+           
         flash('You have successfully registered. Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
@@ -47,10 +52,16 @@ def register():
 @app.route('/', methods=['GET'])
 def index():
     if 'user' in session:
+        username = session['user']
+        print(username)
         with Database() as db:
-            user_data = db.access_user_data()
-            product_params = db.access_product_params()
-        return render_template('index.html', user_data=user_data, product_params=product_params)
+            user_data = db.c.execute("SELECT * FROM USER WHERE username=?", (username,)).fetchone()
+            if user_data:
+                product_params = db.get_user_products(user_data[0]) 
+                return render_template('index.html', user_data=user_data, product_params=product_params)
+            else:
+                flash('User not found.', 'danger')
+                return redirect(url_for('login'))
     else:
         return redirect(url_for('login'))
 
@@ -60,7 +71,12 @@ def add_product():
     max_price = request.form['max_price']
 
     with Database() as db:
-       db.get_product_params(url, max_price)
+       username = session['user'] 
+       user_data = db.c.execute("SELECT * FROM USER WHERE username=?", (username,)).fetchone()
+       if user_data:
+           db.get_product_params(user_data[0], url, max_price)
+       else:
+           flash('User not found.', 'danger')
     return redirect(url_for('index'))
 
 @app.route('/remove_product/<int:product_id>', methods=['POST'])
@@ -68,6 +84,11 @@ def remove_product(product_id):
     with Database() as db:
        db.remove_product(product_id)
     return redirect(url_for('index'))
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)
