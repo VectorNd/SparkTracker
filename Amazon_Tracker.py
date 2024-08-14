@@ -87,11 +87,14 @@ class AmazonTracker:
         price = None
 
         # Extracting data from the amazon html code
-        self.product_title = soup.find(id='productTitle').get_text().strip()
+        self.product_title = soup.find(id='main-title').get_text().strip()
         availability = soup.find(id='availability').get_text().strip()  # In stock.
 
-        price_str = (soup.find(class_='a-price-whole').get_text())
-        price_str_without_comma = price_str.replace(",", "")
+        price_str = (soup.find(attrs={'itemprop': 'price'}).get_text())
+        price_text = price_str.text
+        numbers_only = re.findall(r'\d[\d,]*\.?\d*', price_text)
+        price_number = ''.join(numbers_only)
+        price_str_without_comma = price_number.replace(",", "")
         price_float = float(price_str_without_comma)
         self.price = int(price_float)
 
