@@ -21,7 +21,7 @@ By allowing customers to set a desired maximum price for a product, the system m
 2. Run the application:
 
    ```bash
-   python WalmartTracker.py
+   python Walmart_Tracker.py
    
    flask --app app run --debug 
    ```
